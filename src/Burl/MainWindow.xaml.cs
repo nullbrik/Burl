@@ -1,23 +1,28 @@
-﻿using System.Text;
+﻿using System.IO;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.Win32;
 
 namespace Burl;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     public MainWindow()
     {
         InitializeComponent();
     }
+
+    private void OpenRepository_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog { Title = "Select a Git repository" };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        RepositoryPathText.Text = IsGitRepository(dialog.FolderName)
+            ? dialog.FolderName
+            : "Not a git repository";
+    }
+
+    private static bool IsGitRepository(string path) =>
+        Directory.Exists(Path.Combine(path, ".git"));
 }
