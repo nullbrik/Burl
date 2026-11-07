@@ -32,6 +32,7 @@ public partial class MainWindow : Window
             ChangedFilesList.ItemsSource = null;
             DiffList.ItemsSource = null;
             BranchBox.ItemsSource = null;
+            HistoryList.ItemsSource = null;
             return;
         }
 
@@ -203,6 +204,15 @@ public partial class MainWindow : Window
     {
         RefreshBranches();
         RefreshChangedFiles();
+        RefreshHistory();
+    }
+
+    private void RefreshHistory()
+    {
+        if (_repositoryPath is null)
+            return;
+
+        HistoryList.ItemsSource = GitService.GetHistory(_repositoryPath);
     }
 
     private void RefreshBranches()

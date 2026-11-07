@@ -52,6 +52,18 @@ public static class GitService
         return commit.Sha[..7];
     }
 
+    public static List<CommitInfo> GetHistory(string repositoryPath, int maxCount = 500)
+    {
+        using var repository = new Repository(repositoryPath);
+
+        var filter = new CommitFilter { SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Time };
+
+        return repository.Commits.QueryBy(filter)
+            .Take(maxCount)
+            .Select(commit => new CommitInfo(commit.Sha, commit.MessageShort, commit.Author.Name, commit.Author.When))
+            .ToList();
+    }
+
     public static string GetCurrentBranch(string repositoryPath)
     {
         using var repository = new Repository(repositoryPath);

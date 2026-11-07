@@ -38,77 +38,105 @@
             <TextBlock x:Name="RepositoryPathText" Margin="0,10" />
         </StackPanel>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="350" MinWidth="200" />
-                <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="*" MinWidth="200" />
-            </Grid.ColumnDefinitions>
+        <TextBlock x:Name="StatusText"
+                   DockPanel.Dock="Bottom"
+                   Margin="0,8,0,0"
+                   Foreground="Gray" />
 
-            <DockPanel Grid.Column="0">
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
-                    <TextBox x:Name="CommitMessageBox"
-                             Height="70"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto" />
-                    <Button Content="Commit"
-                            Click="Commit_Click"
-                            Margin="0,8,0,0"
-                            Padding="12,6" />
-                    <TextBlock x:Name="StatusText" Margin="0,6,0,0" Foreground="Gray" />
-                </StackPanel>
+        <TabControl>
+            <TabItem Header="Changes">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="350" MinWidth="200" />
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="*" MinWidth="200" />
+                    </Grid.ColumnDefinitions>
 
-                <ListBox x:Name="ChangedFilesList"
-                         SelectionChanged="ChangedFilesList_SelectionChanged">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox IsChecked="{Binding IsStaged, Mode=OneWay}"
-                                          Click="StageCheckBox_Click"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,8,0" />
-                                <TextBlock Text="{Binding Type}" Width="80" Foreground="Gray" />
-                                <TextBlock Text="{Binding Path}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </DockPanel>
+                    <DockPanel Grid.Column="0">
+                        <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                            <TextBox x:Name="CommitMessageBox"
+                                     Height="70"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto" />
+                            <Button Content="Commit"
+                                    Click="Commit_Click"
+                                    Margin="0,8,0,0"
+                                    Padding="12,6" />
+                        </StackPanel>
 
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+                        <ListBox x:Name="ChangedFilesList"
+                                 SelectionChanged="ChangedFilesList_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding IsStaged, Mode=OneWay}"
+                                                  Click="StageCheckBox_Click"
+                                                  VerticalAlignment="Center"
+                                                  Margin="0,0,8,0" />
+                                        <TextBlock Text="{Binding Type}" Width="80" Foreground="Gray" />
+                                        <TextBlock Text="{Binding Path}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
 
-            <ListBox x:Name="DiffList"
-                     Grid.Column="2"
-                     FontFamily="Cascadia Mono, Consolas"
-                     FontSize="13">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="4,0" />
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Type}" Value="Added">
-                                <Setter Property="Background" Value="#E6FFEC" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Type}" Value="Removed">
-                                <Setter Property="Background" Value="#FFEBE9" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Type}" Value="Hunk">
-                                <Setter Property="Background" Value="#DDF4FF" />
-                                <Setter Property="Foreground" Value="#57606A" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Type}" Value="Header">
-                                <Setter Property="Foreground" Value="Gray" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Text}" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
+                    <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+
+                    <ListBox x:Name="DiffList"
+                             Grid.Column="2"
+                             FontFamily="Cascadia Mono, Consolas"
+                             FontSize="13">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="4,0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Type}" Value="Added">
+                                        <Setter Property="Background" Value="#E6FFEC" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Removed">
+                                        <Setter Property="Background" Value="#FFEBE9" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Hunk">
+                                        <Setter Property="Background" Value="#DDF4FF" />
+                                        <Setter Property="Foreground" Value="#57606A" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Type}" Value="Header">
+                                        <Setter Property="Foreground" Value="Gray" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Text}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="History">
+                <ListView x:Name="HistoryList">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Commit" Width="80">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ShortSha}" FontFamily="Cascadia Mono, Consolas" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Message" Width="520" DisplayMemberBinding="{Binding Message}" />
+                            <GridViewColumn Header="Author" Width="160" DisplayMemberBinding="{Binding Author}" />
+                            <GridViewColumn Header="Date" Width="140"
+                                            DisplayMemberBinding="{Binding Date, StringFormat=yyyy-MM-dd HH:mm}" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>
