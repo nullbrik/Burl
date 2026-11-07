@@ -1,11 +1,16 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using Burl.Models;
 using Burl.Services;
+using LibGit2Sharp;
 using Microsoft.Win32;
 
 namespace Burl;
 
 public partial class MainWindow : Window
 {
+    private string? _repositoryPath;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -20,12 +25,42 @@ public partial class MainWindow : Window
 
         if (!GitService.IsRepository(dialog.FolderName))
         {
+            _repositoryPath = null;
             RepositoryPathText.Text = "Not a git repository";
             ChangedFilesList.ItemsSource = null;
             return;
         }
 
-        RepositoryPathText.Text = dialog.FolderName;
-        ChangedFilesList.ItemsSource = GitService.GetChangedFiles(dialog.FolderName);
+        _repositoryPath = dialog.FolderName;
+        RepositoryPathText.Text = _repositoryPath;
+        RefreshChangedFiles();
+    }
+
+    private void StageCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (_repositoryPath is null || sender is not CheckBox { DataContext: ChangedFile file })
+            return;
+
+        try
+        {
+            if (file.IsStaged == true)
+                GitService.Unstage(_repositoryPath, file.Path);
+            else
+                GitService.Stage(_repositoryPath, file.Path);
+        }
+        catch (LibGit2SharpException ex)
+        {
+            MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        RefreshChangedFiles();
+    }
+
+    private void RefreshChangedFiles()
+    {
+        if (_repositoryPath is null)
+            return;
+
+        ChangedFilesList.ItemsSource = GitService.GetChangedFiles(_repositoryPath);
     }
 }

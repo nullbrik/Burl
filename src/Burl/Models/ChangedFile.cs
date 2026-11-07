@@ -9,4 +9,5 @@ public enum ChangeType
     Conflicted
 }
 
-public record ChangedFile(string Path, ChangeType Type);
+// IsStaged is null when only part of the changes are staged
+public record ChangedFile(string Path, ChangeType Type, bool? IsStaged);
