@@ -28,6 +28,7 @@ public partial class MainWindow : Window
             _repositoryPath = null;
             RepositoryPathText.Text = "Not a git repository";
             ChangedFilesList.ItemsSource = null;
+            DiffList.ItemsSource = null;
             return;
         }
 
@@ -56,11 +57,26 @@ public partial class MainWindow : Window
         RefreshChangedFiles();
     }
 
+    private void ChangedFilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_repositoryPath is null || ChangedFilesList.SelectedItem is not ChangedFile file)
+        {
+            DiffList.ItemsSource = null;
+            return;
+        }
+
+        DiffList.ItemsSource = GitService.GetDiff(_repositoryPath, file.Path);
+    }
+
     private void RefreshChangedFiles()
     {
         if (_repositoryPath is null)
             return;
 
-        ChangedFilesList.ItemsSource = GitService.GetChangedFiles(_repositoryPath);
+        var selectedPath = (ChangedFilesList.SelectedItem as ChangedFile)?.Path;
+        var files = GitService.GetChangedFiles(_repositoryPath);
+
+        ChangedFilesList.ItemsSource = files;
+        ChangedFilesList.SelectedItem = files.FirstOrDefault(file => file.Path == selectedPath);
     }
 }

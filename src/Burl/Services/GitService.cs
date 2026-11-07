@@ -38,6 +38,33 @@ public static class GitService
         Commands.Unstage(repository, filePath);
     }
 
+    public static List<DiffLine> GetDiff(string repositoryPath, string filePath)
+    {
+        using var repository = new Repository(repositoryPath);
+
+        var patch = repository.Diff.Compare<Patch>(
+            repository.Head.Tip?.Tree,
+            DiffTargets.Index | DiffTargets.WorkingDirectory,
+            [filePath]);
+
+        return patch.Content
+            .TrimEnd('\n')
+            .Split('\n')
+            .Select(line => line.TrimEnd('\r'))
+            .Select(line => new DiffLine(line, ToDiffLineType(line)))
+            .ToList();
+    }
+
+    private static DiffLineType ToDiffLineType(string line)
+    {
+        if (line.StartsWith("+++") || line.StartsWith("---")) return DiffLineType.Header;
+        if (line.StartsWith("@@")) return DiffLineType.Hunk;
+        if (line.StartsWith('+')) return DiffLineType.Added;
+        if (line.StartsWith('-')) return DiffLineType.Removed;
+        if (line.StartsWith(' ') || line.Length == 0) return DiffLineType.Context;
+        return DiffLineType.Header;
+    }
+
     private static ChangeType ToChangeType(FileStatus state)
     {
         if (state.HasFlag(FileStatus.Conflicted)) return ChangeType.Conflicted;
