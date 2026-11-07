@@ -33,6 +33,8 @@ public partial class MainWindow : Window
             DiffList.ItemsSource = null;
             BranchBox.ItemsSource = null;
             HistoryList.ItemsSource = null;
+            CommitFilesList.ItemsSource = null;
+            CommitDiffList.ItemsSource = null;
             return;
         }
 
@@ -212,7 +214,39 @@ public partial class MainWindow : Window
         if (_repositoryPath is null)
             return;
 
-        HistoryList.ItemsSource = GitService.GetHistory(_repositoryPath);
+        var selectedSha = (HistoryList.SelectedItem as CommitInfo)?.Sha;
+        var commits = GitService.GetHistory(_repositoryPath);
+
+        HistoryList.ItemsSource = commits;
+        HistoryList.SelectedItem = commits.FirstOrDefault(commit => commit.Sha == selectedSha);
+    }
+
+    private void HistoryList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        CommitDiffList.ItemsSource = null;
+
+        if (_repositoryPath is null || HistoryList.SelectedItem is not CommitInfo commit)
+        {
+            CommitFilesList.ItemsSource = null;
+            return;
+        }
+
+        var files = GitService.GetCommitFiles(_repositoryPath, commit.Sha);
+        CommitFilesList.ItemsSource = files;
+        CommitFilesList.SelectedItem = files.FirstOrDefault();
+    }
+
+    private void CommitFilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_repositoryPath is null
+            || HistoryList.SelectedItem is not CommitInfo commit
+            || CommitFilesList.SelectedItem is not CommitFile file)
+        {
+            CommitDiffList.ItemsSource = null;
+            return;
+        }
+
+        CommitDiffList.ItemsSource = GitService.GetCommitDiff(_repositoryPath, commit.Sha, file);
     }
 
     private void RefreshBranches()

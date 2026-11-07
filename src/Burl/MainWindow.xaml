@@ -2,6 +2,42 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Burl" Height="600" Width="1100">
+    <Window.Resources>
+        <Style x:Key="DiffListStyle" TargetType="ListBox">
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="4,0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Type}" Value="Added">
+                                <Setter Property="Background" Value="#E6FFEC" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="Removed">
+                                <Setter Property="Background" Value="#FFEBE9" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="Hunk">
+                                <Setter Property="Background" Value="#DDF4FF" />
+                                <Setter Property="Foreground" Value="#57606A" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="Header">
+                                <Setter Property="Foreground" Value="Gray" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Text}" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <DockPanel Margin="20">
         <StackPanel DockPanel.Dock="Top">
             <StackPanel Orientation="Horizontal">
@@ -86,56 +122,67 @@
 
                     <ListBox x:Name="DiffList"
                              Grid.Column="2"
-                             FontFamily="Cascadia Mono, Consolas"
-                             FontSize="13">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Padding" Value="4,0" />
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Type}" Value="Added">
-                                        <Setter Property="Background" Value="#E6FFEC" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="Removed">
-                                        <Setter Property="Background" Value="#FFEBE9" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="Hunk">
-                                        <Setter Property="Background" Value="#DDF4FF" />
-                                        <Setter Property="Foreground" Value="#57606A" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Type}" Value="Header">
-                                        <Setter Property="Foreground" Value="Gray" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Text}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                             Style="{StaticResource DiffListStyle}" />
                 </Grid>
             </TabItem>
 
             <TabItem Header="History">
-                <ListView x:Name="HistoryList">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn Header="Commit" Width="80">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding ShortSha}" FontFamily="Cascadia Mono, Consolas" />
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="Message" Width="520" DisplayMemberBinding="{Binding Message}" />
-                            <GridViewColumn Header="Author" Width="160" DisplayMemberBinding="{Binding Author}" />
-                            <GridViewColumn Header="Date" Width="140"
-                                            DisplayMemberBinding="{Binding Date, StringFormat=yyyy-MM-dd HH:mm}" />
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" MinHeight="100" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="*" MinHeight="100" />
+                    </Grid.RowDefinitions>
+
+                    <ListView x:Name="HistoryList"
+                              Grid.Row="0"
+                              SelectionChanged="HistoryList_SelectionChanged">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Commit" Width="80">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ShortSha}" FontFamily="Cascadia Mono, Consolas" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Message" Width="520" DisplayMemberBinding="{Binding Message}" />
+                                <GridViewColumn Header="Author" Width="160" DisplayMemberBinding="{Binding Author}" />
+                                <GridViewColumn Header="Date" Width="140"
+                                                DisplayMemberBinding="{Binding Date, StringFormat=yyyy-MM-dd HH:mm}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" />
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="350" MinWidth="200" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="*" MinWidth="200" />
+                        </Grid.ColumnDefinitions>
+
+                        <ListBox x:Name="CommitFilesList"
+                                 Grid.Column="0"
+                                 SelectionChanged="CommitFilesList_SelectionChanged">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Type}" Width="80" Foreground="Gray" />
+                                        <TextBlock Text="{Binding Path}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+
+                        <ListBox x:Name="CommitDiffList"
+                                 Grid.Column="2"
+                                 Style="{StaticResource DiffListStyle}" />
+                    </Grid>
+                </Grid>
             </TabItem>
         </TabControl>
     </DockPanel>

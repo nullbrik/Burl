@@ -126,13 +126,45 @@ public static class GitService
             DiffTargets.Index | DiffTargets.WorkingDirectory,
             [filePath]);
 
-        return patch.Content
+        return ToDiffLines(patch);
+    }
+
+    public static List<CommitFile> GetCommitFiles(string repositoryPath, string sha)
+    {
+        using var repository = new Repository(repositoryPath);
+        var commit = repository.Lookup<Commit>(sha);
+
+        return repository.Diff.Compare<TreeChanges>(commit.Parents.FirstOrDefault()?.Tree, commit.Tree)
+            .Select(change => new CommitFile(change.Path, change.OldPath, ToChangeType(change.Status)))
+            .OrderBy(file => file.Path)
+            .ToList();
+    }
+
+    public static List<DiffLine> GetCommitDiff(string repositoryPath, string sha, CommitFile file)
+    {
+        using var repository = new Repository(repositoryPath);
+        var commit = repository.Lookup<Commit>(sha);
+
+        var patch = repository.Diff.Compare<Patch>(commit.Parents.FirstOrDefault()?.Tree, commit.Tree, [file.OldPath, file.Path]);
+        return ToDiffLines(patch);
+    }
+
+    private static List<DiffLine> ToDiffLines(Patch patch) =>
+        patch.Content
             .TrimEnd('\n')
             .Split('\n')
             .Select(line => line.TrimEnd('\r'))
             .Select(line => new DiffLine(line, ToDiffLineType(line)))
             .ToList();
-    }
+
+    private static ChangeType ToChangeType(LibGit2Sharp.ChangeKind kind) => kind switch
+    {
+        LibGit2Sharp.ChangeKind.Added or LibGit2Sharp.ChangeKind.Copied => ChangeType.Added,
+        LibGit2Sharp.ChangeKind.Deleted => ChangeType.Deleted,
+        LibGit2Sharp.ChangeKind.Renamed => ChangeType.Renamed,
+        LibGit2Sharp.ChangeKind.Conflicted => ChangeType.Conflicted,
+        _ => ChangeType.Modified
+    };
 
     private static DiffLineType ToDiffLineType(string line)
     {
