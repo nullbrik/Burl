@@ -52,6 +52,18 @@ public static class GitService
         return commit.Sha[..7];
     }
 
+    public static Task<GitCliResult> PushAsync(string repositoryPath)
+    {
+        using var repository = new Repository(repositoryPath);
+
+        return repository.Head.TrackedBranch is null
+            ? GitCli.RunAsync(repositoryPath, "push", "-u", "origin", "HEAD")
+            : GitCli.RunAsync(repositoryPath, "push");
+    }
+
+    public static Task<GitCliResult> PullAsync(string repositoryPath) =>
+        GitCli.RunAsync(repositoryPath, "pull", "--ff-only");
+
     public static List<DiffLine> GetDiff(string repositoryPath, string filePath)
     {
         using var repository = new Repository(repositoryPath);

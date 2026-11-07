@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
 using Burl.Models;
 using Burl.Services;
@@ -83,6 +84,50 @@ public partial class MainWindow : Window
         catch (LibGit2SharpException ex)
         {
             MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        RefreshChangedFiles();
+    }
+
+    private async void Pull_Click(object sender, RoutedEventArgs e) =>
+        await RunRemoteOperationAsync("Pulling...", "Pulled", GitService.PullAsync);
+
+    private async void Push_Click(object sender, RoutedEventArgs e) =>
+        await RunRemoteOperationAsync("Pushing...", "Pushed", GitService.PushAsync);
+
+    private async Task RunRemoteOperationAsync(
+        string runningText, string successText, Func<string, Task<GitCliResult>> operation)
+    {
+        if (_repositoryPath is null)
+            return;
+
+        PullButton.IsEnabled = false;
+        PushButton.IsEnabled = false;
+        StatusText.Text = runningText;
+
+        try
+        {
+            var result = await operation(_repositoryPath);
+
+            if (result.Succeeded)
+            {
+                StatusText.Text = successText;
+            }
+            else
+            {
+                StatusText.Text = "";
+                MessageBox.Show(result.Output, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex) when (ex is Win32Exception or LibGit2SharpException)
+        {
+            StatusText.Text = "";
+            MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            PullButton.IsEnabled = true;
+            PushButton.IsEnabled = true;
         }
 
         RefreshChangedFiles();
