@@ -38,6 +38,20 @@ public static class GitService
         Commands.Unstage(repository, filePath);
     }
 
+    public static string Commit(string repositoryPath, string message)
+    {
+        using var repository = new Repository(repositoryPath);
+
+        var signature = repository.Config.BuildSignature(DateTimeOffset.Now)
+            ?? throw new LibGit2SharpException("Set user.name and user.email in your git config first.");
+
+        if (!repository.RetrieveStatus().Any(entry => (entry.State & IndexChanges) != 0))
+            throw new EmptyCommitException("Nothing staged to commit.");
+
+        var commit = repository.Commit(message, signature, signature, new CommitOptions());
+        return commit.Sha[..7];
+    }
+
     public static List<DiffLine> GetDiff(string repositoryPath, string filePath)
     {
         using var repository = new Repository(repositoryPath);

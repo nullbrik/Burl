@@ -34,6 +34,7 @@ public partial class MainWindow : Window
 
         _repositoryPath = dialog.FolderName;
         RepositoryPathText.Text = _repositoryPath;
+        StatusText.Text = "";
         RefreshChangedFiles();
     }
 
@@ -48,6 +49,36 @@ public partial class MainWindow : Window
                 GitService.Unstage(_repositoryPath, file.Path);
             else
                 GitService.Stage(_repositoryPath, file.Path);
+        }
+        catch (LibGit2SharpException ex)
+        {
+            MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        RefreshChangedFiles();
+    }
+
+    private void Commit_Click(object sender, RoutedEventArgs e)
+    {
+        if (_repositoryPath is null)
+            return;
+
+        var message = CommitMessageBox.Text.Trim();
+        if (message.Length == 0)
+        {
+            StatusText.Text = "Write a commit message first";
+            return;
+        }
+
+        try
+        {
+            var sha = GitService.Commit(_repositoryPath, message);
+            CommitMessageBox.Clear();
+            StatusText.Text = $"Committed {sha}";
+        }
+        catch (EmptyCommitException)
+        {
+            StatusText.Text = "Nothing staged to commit";
         }
         catch (LibGit2SharpException ex)
         {
