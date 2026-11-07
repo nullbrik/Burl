@@ -18,6 +18,22 @@
                         Click="Push_Click"
                         Margin="8,0,0,0"
                         Padding="12,6" />
+
+                <TextBlock Text="Branch"
+                           VerticalAlignment="Center"
+                           Margin="24,0,8,0" />
+                <ComboBox x:Name="BranchBox"
+                          Width="180"
+                          VerticalContentAlignment="Center"
+                          SelectionChanged="BranchBox_SelectionChanged" />
+                <TextBox x:Name="NewBranchBox"
+                         Width="160"
+                         Margin="16,0,0,0"
+                         VerticalContentAlignment="Center" />
+                <Button Content="Create branch"
+                        Click="CreateBranch_Click"
+                        Margin="8,0,0,0"
+                        Padding="12,6" />
             </StackPanel>
             <TextBlock x:Name="RepositoryPathText" Margin="0,10" />
         </StackPanel>

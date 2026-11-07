@@ -52,6 +52,47 @@ public static class GitService
         return commit.Sha[..7];
     }
 
+    public static string GetCurrentBranch(string repositoryPath)
+    {
+        using var repository = new Repository(repositoryPath);
+        return repository.Head.FriendlyName;
+    }
+
+    public static List<string> GetLocalBranches(string repositoryPath)
+    {
+        using var repository = new Repository(repositoryPath);
+
+        var names = repository.Branches
+            .Where(branch => !branch.IsRemote)
+            .Select(branch => branch.FriendlyName)
+            .ToList();
+
+        // A new repository has no branch until its first commit
+        if (!names.Contains(repository.Head.FriendlyName))
+            names.Add(repository.Head.FriendlyName);
+
+        return names.Order().ToList();
+    }
+
+    public static void SwitchBranch(string repositoryPath, string branchName)
+    {
+        using var repository = new Repository(repositoryPath);
+        Commands.Checkout(repository, repository.Branches[branchName]);
+    }
+
+    public static void CreateBranch(string repositoryPath, string branchName)
+    {
+        using var repository = new Repository(repositoryPath);
+
+        if (repository.Head.Tip is null)
+            throw new LibGit2SharpException("Make a first commit before creating a branch.");
+
+        if (!Reference.IsValidName($"refs/heads/{branchName}"))
+            throw new LibGit2SharpException($"'{branchName}' is not a valid branch name.");
+
+        Commands.Checkout(repository, repository.CreateBranch(branchName));
+    }
+
     public static Task<GitCliResult> PushAsync(string repositoryPath)
     {
         using var repository = new Repository(repositoryPath);

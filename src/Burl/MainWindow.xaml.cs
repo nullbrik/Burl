@@ -11,6 +11,7 @@ namespace Burl;
 public partial class MainWindow : Window
 {
     private string? _repositoryPath;
+    private bool _isLoadingBranches;
 
     public MainWindow()
     {
@@ -30,13 +31,14 @@ public partial class MainWindow : Window
             RepositoryPathText.Text = "Not a git repository";
             ChangedFilesList.ItemsSource = null;
             DiffList.ItemsSource = null;
+            BranchBox.ItemsSource = null;
             return;
         }
 
         _repositoryPath = dialog.FolderName;
         RepositoryPathText.Text = _repositoryPath;
         StatusText.Text = "";
-        RefreshChangedFiles();
+        RefreshAll();
     }
 
     private void StageCheckBox_Click(object sender, RoutedEventArgs e)
@@ -86,7 +88,7 @@ public partial class MainWindow : Window
             MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        RefreshChangedFiles();
+        RefreshAll();
     }
 
     private async void Pull_Click(object sender, RoutedEventArgs e) =>
@@ -130,7 +132,7 @@ public partial class MainWindow : Window
             PushButton.IsEnabled = true;
         }
 
-        RefreshChangedFiles();
+        RefreshAll();
     }
 
     private void ChangedFilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -142,6 +144,76 @@ public partial class MainWindow : Window
         }
 
         DiffList.ItemsSource = GitService.GetDiff(_repositoryPath, file.Path);
+    }
+
+    private void BranchBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoadingBranches || _repositoryPath is null || BranchBox.SelectedItem is not string branchName)
+            return;
+
+        if (branchName == GitService.GetCurrentBranch(_repositoryPath))
+            return;
+
+        try
+        {
+            GitService.SwitchBranch(_repositoryPath, branchName);
+            StatusText.Text = $"Switched to {branchName}";
+        }
+        catch (CheckoutConflictException)
+        {
+            MessageBox.Show(
+                $"Your uncommitted changes would be overwritten by {branchName}. Commit or stash them first.",
+                "Burl", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (LibGit2SharpException ex)
+        {
+            MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        RefreshAll();
+    }
+
+    private void CreateBranch_Click(object sender, RoutedEventArgs e)
+    {
+        if (_repositoryPath is null)
+            return;
+
+        var branchName = NewBranchBox.Text.Trim();
+        if (branchName.Length == 0)
+        {
+            StatusText.Text = "Write a branch name first";
+            return;
+        }
+
+        try
+        {
+            GitService.CreateBranch(_repositoryPath, branchName);
+            NewBranchBox.Clear();
+            StatusText.Text = $"Created and switched to {branchName}";
+        }
+        catch (LibGit2SharpException ex)
+        {
+            MessageBox.Show(ex.Message, "Burl", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        RefreshAll();
+    }
+
+    private void RefreshAll()
+    {
+        RefreshBranches();
+        RefreshChangedFiles();
+    }
+
+    private void RefreshBranches()
+    {
+        if (_repositoryPath is null)
+            return;
+
+        _isLoadingBranches = true;
+        BranchBox.ItemsSource = GitService.GetLocalBranches(_repositoryPath);
+        BranchBox.SelectedItem = GitService.GetCurrentBranch(_repositoryPath);
+        _isLoadingBranches = false;
     }
 
     private void RefreshChangedFiles()
